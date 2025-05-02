@@ -53,69 +53,74 @@ class MathGame {
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
+        const startDrawing = (x, y) => {
+            this.isDrawing = true;
+            this.lastX = x;
+            this.lastY = y;
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, y);
+        };
+
+        const draw = (x, y) => {
+            if (!this.isDrawing) return;
+            this.ctx.lineTo(x, y);
+            this.ctx.stroke();
+            this.lastX = x;
+            this.lastY = y;
+        };
+
+        const stopDrawing = () => {
+            if (this.isDrawing) {
+                this.isDrawing = false;
+                this.ctx.closePath();
+            }
+        };
+
         // Mouse events
         this.canvas.addEventListener('mousedown', (e) => {
             const rect = this.canvas.getBoundingClientRect();
-            this.isDrawing = true;
-            this.lastX = e.clientX - rect.left;
-            this.lastY = e.clientY - rect.top;
-            this.ctx.beginPath();
-            this.ctx.moveTo(this.lastX, this.lastY);
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            startDrawing(x, y);
         });
 
         this.canvas.addEventListener('mousemove', (e) => {
-            if (!this.isDrawing) return;
             const rect = this.canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-            
-            this.ctx.lineTo(x, y);
-            this.ctx.stroke();
-            
-            this.lastX = x;
-            this.lastY = y;
+            draw(x, y);
         });
 
-        this.canvas.addEventListener('mouseup', () => {
-            this.isDrawing = false;
-            this.ctx.closePath();
-        });
-
-        this.canvas.addEventListener('mouseout', () => {
-            this.isDrawing = false;
-            this.ctx.closePath();
-        });
+        this.canvas.addEventListener('mouseup', stopDrawing);
+        this.canvas.addEventListener('mouseout', stopDrawing);
 
         // Touch events
         this.canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             const rect = this.canvas.getBoundingClientRect();
             const touch = e.touches[0];
-            this.isDrawing = true;
-            this.lastX = touch.clientX - rect.left;
-            this.lastY = touch.clientY - rect.top;
-            this.ctx.beginPath();
-            this.ctx.moveTo(this.lastX, this.lastY);
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            startDrawing(x, y);
         });
 
         this.canvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
-            if (!this.isDrawing) return;
             const rect = this.canvas.getBoundingClientRect();
             const touch = e.touches[0];
             const x = touch.clientX - rect.left;
             const y = touch.clientY - rect.top;
-            
-            this.ctx.lineTo(x, y);
-            this.ctx.stroke();
-            
-            this.lastX = x;
-            this.lastY = y;
+            draw(x, y);
         });
 
-        this.canvas.addEventListener('touchend', () => {
-            this.isDrawing = false;
-            this.ctx.closePath();
+        this.canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            stopDrawing();
+        });
+
+        this.canvas.addEventListener('touchcancel', (e) => {
+            e.preventDefault();
+            stopDrawing();
         });
     }
 
