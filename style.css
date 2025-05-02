@@ -549,6 +549,10 @@ button:hover {
     position: relative;
     z-index: 2;
     background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60px;
 }
 
 .hearts-container {
@@ -563,8 +567,8 @@ button:hover {
 
 .heart {
     position: absolute;
-    width: 120px;
-    height: 120px;
+    width: 30px;
+    height: 30px;
     animation: fallHeart 12s linear forwards;
     cursor: pointer;
     user-select: none;
@@ -572,10 +576,13 @@ button:hover {
     z-index: 2;
     filter: drop-shadow(0 0 5px rgba(0,0,0,0.3));
     pointer-events: auto;
-    background-color: var(--heart-color);
-    clip-path: path('M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402m5.726-20.583c-2.203 0-4.446 1.042-5.726 3.238-1.285-2.206-3.522-3.248-5.719-3.248-3.183 0-6.281 2.187-6.281 6.191 0 4.661 5.571 9.429 12 15.809 6.43-6.38 12-11.148 12-15.809 0-4.011-3.095-6.181-6.274-6.181');
-    padding: 20px;
-    margin: -20px;
+    font-size: 40px;
+    line-height: 1;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-shadow: 0 0 10px rgba(0,0,0,0.2);
 }
 
 .heart::before {
@@ -612,21 +619,24 @@ button:hover {
 }
 
 .collected-heart {
-    width: 80px;
-    height: 80px;
+    width: 10px;
+    height: 10px;
     animation: collectHeart 0.5s ease-out;
-    background-color: var(--heart-color);
-    clip-path: path('M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402m5.726-20.583c-2.203 0-4.446 1.042-5.726 3.238-1.285-2.206-3.522-3.248-5.719-3.248-3.183 0-6.281 2.187-6.281 6.191 0 4.661 5.571 9.429 12 15.809 6.43-6.38 12-11.148 12-15.809 0-4.011-3.095-6.181-6.274-6.181');
+    font-size: 30px;
+    line-height: 1;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    padding: 10px;
-    margin: -10px;
+    text-shadow: 0 0 5px rgba(0,0,0,0.2);
 }
 
 .collected-heart:hover {
     transform: scale(1.1);
 }
 
-.hearts-counter {
+/* .hearts-counter {
     position: fixed;
     bottom: 40px;
     left: 0;
@@ -640,7 +650,7 @@ button:hover {
     margin: 0 20px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     z-index: 2;
-}
+} */
 
 @keyframes fallHeart {
     0% {
@@ -683,7 +693,7 @@ button:hover {
     left: 50%;
     transform: translateX(-50%);
     padding: 15px 30px;
-    font-size: 1.5em;
+    font-size: 1em;
     background: linear-gradient(145deg, #4CAF50, #45a049);
     color: white;
     border: none;

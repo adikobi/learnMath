@@ -485,7 +485,7 @@ class MathGame {
         this.updateHeartsCounter();
         
         // Generate random target color
-        const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'];
+        const colors = ['#FF69B4', '#FFFFFF', '#FFA500', '#FFFF00', '#00FF00', '#0000FF', '#800080'];
         this.targetHeartColor = colors[Math.floor(Math.random() * colors.length)];
         
         // Display target color
@@ -493,7 +493,7 @@ class MathGame {
         targetDisplay.style.backgroundColor = this.targetHeartColor;
         
         // Set target count
-        document.querySelector('.target-count').textContent = this.selectedNumber;
+        // document.querySelector('.target-count').textContent = this.selectedNumber;
         
         // Clear previous hearts
         const container = document.querySelector('.hearts-container');
@@ -513,14 +513,15 @@ class MathGame {
 
     generateHearts() {
         const container = document.querySelector('.hearts-container');
-        const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'];
+        const colors = ['#FF69B4', '#FFFFFF', '#FFA500', '#FFFF00', '#00FF00', '#0000FF', '#800080'];
+        const hearts = ['🩷', '❤', '🧡', '💛', '💚', '💙', '💜'];
         
         const createHeart = () => {
             const heart = document.createElement('div');
             heart.className = 'heart';
             
             // Random position across the width
-            const maxLeft = window.innerWidth - 400;
+            const maxLeft = window.innerWidth - 100;
             const left = Math.random() * maxLeft;
             heart.style.left = `${left}px`;
             
@@ -529,7 +530,9 @@ class MathGame {
                 colors.indexOf(this.targetHeartColor) : 
                 Math.floor(Math.random() * colors.length);
             const color = colors[colorIndex];
-            heart.style.setProperty('--heart-color', color);
+            const heartEmoji = hearts[colorIndex];
+            heart.textContent = heartEmoji;
+            heart.style.color = color;
             
             // Add click handler with larger hitbox
             const handleClick = (e) => {
@@ -541,7 +544,7 @@ class MathGame {
                 const length = 360;
                 if (clickX >= rect.left - length && clickX <= rect.right + length &&
                     clickY >= rect.top - length && clickY <= rect.bottom + length) {
-                    this.collectHeart(heart, color);
+                    this.collectHeart(heart, color, heartEmoji);
                 }
             };
             
@@ -557,7 +560,7 @@ class MathGame {
         };
 
         // Create initial hearts
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 10; i++) {
             createHeart();
         }
 
@@ -569,14 +572,16 @@ class MathGame {
         }, 1500);
     }
 
-    collectHeart(heart, color) {
+    collectHeart(heart, color, emoji) {
         this.collectedHeartColors.push(color);
         console.log(this.collectedHeartColors);
+        
         // Add to collected hearts display
         const collectedContainer = document.querySelector('.collected-hearts');
         const collectedHeart = document.createElement('div');
         collectedHeart.className = 'collected-heart';
-        collectedHeart.style.setProperty('--heart-color', color);
+        collectedHeart.textContent = emoji;
+        collectedHeart.style.color = color;
         collectedContainer.appendChild(collectedHeart);
         
         // Add click handler to remove heart
@@ -599,13 +604,27 @@ class MathGame {
     updateHeartsCounter() {
         const targetCount = this.selectedNumber;
         const correctHearts = this.collectedHeartColors.filter(color => color === this.targetHeartColor).length;
-        document.querySelector('.collected').textContent = `${correctHearts}/${targetCount}`;
+        const totalHearts = this.collectedHeartColors.length;
+        
+        // Update the target count display
+        const targetDisplay = document.querySelector('.target-count');
+        if (targetDisplay) {
+            targetDisplay.textContent = `${correctHearts}/${targetCount}`;
+            
+            // Add visual indicator if there are extra hearts
+            if (totalHearts > targetCount) {
+                targetDisplay.style.color = '#ff0000';
+            } else {
+                targetDisplay.style.color = '#4CAF50';
+            }
+        }
     }
 
     finishHeartCollection() {
         const correctHearts = this.collectedHeartColors.filter(color => color === this.targetHeartColor).length;
+        const totalHearts = this.collectedHeartColors.length;
         
-        if (correctHearts === this.selectedNumber) {
+        if (correctHearts === this.selectedNumber && totalHearts === this.selectedNumber) {
             this.createCelebration();
             clearInterval(this.heartInterval);
             
@@ -614,7 +633,22 @@ class MathGame {
                 document.getElementById('drawing-number').textContent = this.selectedNumber;
             }, 1000);
         } else {
-            alert('עדיין לא אספת את כל הלבבות הנכונים!');
+            // Visual feedback for error
+            const errorEmoji = document.createElement('div');
+            errorEmoji.className = 'error-feedback';
+            errorEmoji.textContent = '😢';
+            errorEmoji.style.position = 'fixed';
+            errorEmoji.style.top = '50%';
+            errorEmoji.style.left = '50%';
+            errorEmoji.style.transform = 'translate(-50%, -50%)';
+            errorEmoji.style.fontSize = '100px';
+            errorEmoji.style.animation = 'shake 0.5s ease-in-out';
+            errorEmoji.style.zIndex = '1000';
+            document.body.appendChild(errorEmoji);
+            
+            setTimeout(() => {
+                errorEmoji.remove();
+            }, 1000);
         }
     }
 }
