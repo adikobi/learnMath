@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>משחק חשבון</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- שלב 1: בחירת שחקן -->
+        <div id="player-selection" class="game-stage active">
+            <h2>🎮 בחר שחקן 🎮</h2>
+            <div class="players-grid">
+                <div class="player" data-player="mayan">
+                    <img src="images/mayan/player.jpg" alt="מעין">
+                    <p>מעין</p>
+                </div>
+                <div class="player" data-player="tamar">
+                    <img src="images/tamar/player.jpg" alt="תמר">
+                    <p>תמר</p>
+                </div>
+                <div class="player" data-player="yael">
+                    <img src="images/yael/player.jpg" alt="יעל">
+                    <p>יעל</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- שלב 2: מציאת המספר -->
+        <div id="number-finding" class="game-stage">
+            <h2>🔍 מצא את המספר 🔍</h2>
+            <div id="target-number" class="hidden">לחץ כאן לשמיעת המספר</div>
+            <div id="floating-numbers"></div>
+            <div class="sound-button" id="repeat-number"></div>
+        </div>
+
+        <!-- שלב 3: תרגילי חשבון -->
+        <div id="math-exercises" class="game-stage">
+            <h2>🧮 תרגילי חשבון 🧮</h2>
+            <div id="exercise1" class="exercise">
+                <div class="equation"></div>
+                <div class="number-options"></div>
+                <div class="selected-numbers"></div>
+            </div>
+            <div id="exercise2" class="exercise">
+                <div class="equation"></div>
+                <div class="number-options"></div>
+                <div class="selected-numbers"></div>
+            </div>
+        </div>
+
+        <!-- שלב 4: ציור המספר -->
+        <div id="number-drawing" class="game-stage">
+            <h2>🎨 צייר את המספר 🎨</h2>
+            <div class="drawing-instructions">צייר את המספר <span id="drawing-number"></span></div>
+            <canvas id="drawing-canvas"></canvas>
+            <div class="drawing-buttons">
+                <button id="clear-canvas">🧹 נקה</button>
+                <button id="finish-drawing">✅ סיימתי</button>
+            </div>
+        </div>
+    </div>
+    <audio id="success-sound" src="sounds/success.mp3"></audio>
+    <audio id="error-sound" src="sounds/error.mp3"></audio>
+    <script src="game.js"></script>
+</body>
+</html> 
