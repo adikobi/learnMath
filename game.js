@@ -6,9 +6,13 @@ class MathGame {
         this.exerciseAnswers = [];
         this.completedExercises = 0;
         this.selectedDigits = [];
+        this.collectedHearts = 0;
+        this.collectedHeartColors = [];
         this.setupEventListeners();
         this.setupDrawingCanvas();
-        this.setupAudio();
+        
+        // Ensure we start with player selection
+        this.showStage('player-selection');
     }
 
     setupEventListeners() {
@@ -24,11 +28,6 @@ class MathGame {
         // Target number click
         document.getElementById('target-number').addEventListener('click', () => this.toggleNumberVisibility());
         document.getElementById('repeat-number').addEventListener('click', () => this.speakNumber());
-    }
-
-    setupAudio() {
-        this.successSound = document.getElementById('success-sound');
-        this.errorSound = document.getElementById('error-sound');
     }
 
     setupDrawingCanvas() {
@@ -138,6 +137,21 @@ class MathGame {
             e.preventDefault();
             stopDrawing();
         });
+    }
+
+    showStage(stage) {
+        // Hide all stages first
+        document.querySelectorAll('.game-stage').forEach(s => {
+            s.classList.remove('active');
+            s.style.display = 'none';
+        });
+        
+        // Show the requested stage
+        const stageElement = document.getElementById(stage);
+        stageElement.classList.add('active');
+        stageElement.style.display = 'flex';
+        
+        this.currentStage = stage;
     }
 
     selectPlayer(player) {
@@ -393,7 +407,6 @@ class MathGame {
         const selectedNumber = parseInt(this.selectedDigits[exerciseIndex].join(''));
         
         if (selectedNumber === answer) {
-            this.successSound.play();
             this.createCelebration();
             exercise.style.backgroundColor = '#90EE90';
             exercise.classList.add('success');
@@ -407,13 +420,13 @@ class MathGame {
                 }, 1000);
             } else if (this.completedExercises === 2) {
                 setTimeout(() => {
-                    this.showStage('number-drawing');
-                    document.getElementById('drawing-number').textContent = this.selectedNumber;
+                    this.showStage('heart-collection');
+                    this.startHeartCollection();
                 }, 1000);
             }
         } else if (this.selectedDigits[exerciseIndex].length === answer.toString().length) {
-            this.errorSound.play();
             exercise.style.backgroundColor = '#FFB6C1';
+            exercise.classList.add('shake');
             setTimeout(() => {
                 this.selectedDigits[exerciseIndex] = [];
                 exercise.querySelectorAll('.number-option').forEach(opt => {
@@ -422,6 +435,7 @@ class MathGame {
                 });
                 exercise.querySelector('.selected-numbers').innerHTML = '';
                 exercise.style.backgroundColor = '';
+                exercise.classList.remove('shake');
             }, 1000);
         }
     }
@@ -465,10 +479,143 @@ class MathGame {
         this.resetGame();
     }
 
-    showStage(stage) {
-        document.querySelectorAll('.game-stage').forEach(s => s.classList.remove('active'));
-        document.getElementById(stage).classList.add('active');
-        this.currentStage = stage;
+    startHeartCollection() {
+        this.collectedHearts = 0;
+        this.collectedHeartColors = [];
+        this.updateHeartsCounter();
+        
+        // Generate random target color
+        const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'];
+        this.targetHeartColor = colors[Math.floor(Math.random() * colors.length)];
+        
+        // Display target color
+        const targetDisplay = document.querySelector('.target-color-display');
+        targetDisplay.style.backgroundColor = this.targetHeartColor;
+        
+        // Set target count
+        document.querySelector('.target-count').textContent = this.selectedNumber;
+        
+        // Clear previous hearts
+        const container = document.querySelector('.hearts-container');
+        container.innerHTML = '';
+        document.querySelector('.collected-hearts').innerHTML = '';
+        
+        // Add finish button
+        const finishButton = document.createElement('button');
+        finishButton.className = 'finish-hearts-button';
+        finishButton.textContent = 'סיים איסוף לבבות';
+        finishButton.addEventListener('click', () => this.finishHeartCollection());
+        document.getElementById('heart-collection').appendChild(finishButton);
+        
+        // Start generating hearts
+        this.generateHearts();
+    }
+
+    generateHearts() {
+        const container = document.querySelector('.hearts-container');
+        const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'];
+        
+        const createHeart = () => {
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            
+            // Random position across the width
+            const maxLeft = window.innerWidth - 400;
+            const left = Math.random() * maxLeft;
+            heart.style.left = `${left}px`;
+            
+            // Make sure target color appears more frequently
+            const colorIndex = Math.random() < 0.5 ? 
+                colors.indexOf(this.targetHeartColor) : 
+                Math.floor(Math.random() * colors.length);
+            const color = colors[colorIndex];
+            heart.style.setProperty('--heart-color', color);
+            
+            // Add click handler with larger hitbox
+            const handleClick = (e) => {
+                const rect = heart.getBoundingClientRect();
+                const clickX = e.clientX;
+                const clickY = e.clientY;
+                
+                // Check if click is within the extended hitbox
+                const length = 360;
+                if (clickX >= rect.left - length && clickX <= rect.right + length &&
+                    clickY >= rect.top - length && clickY <= rect.bottom + length) {
+                    this.collectHeart(heart, color);
+                }
+            };
+            
+            heart.addEventListener('click', handleClick);
+            
+            // Add to container
+            container.appendChild(heart);
+            
+            // Remove heart after animation
+            heart.addEventListener('animationend', () => {
+                heart.remove();
+            });
+        };
+
+        // Create initial hearts
+        for (let i = 0; i < 6; i++) {
+            createHeart();
+        }
+
+        // Continue generating hearts
+        this.heartInterval = setInterval(() => {
+            if (this.currentStage === 'heart-collection') {
+                createHeart();
+            }
+        }, 1500);
+    }
+
+    collectHeart(heart, color) {
+        this.collectedHeartColors.push(color);
+        console.log(this.collectedHeartColors);
+        // Add to collected hearts display
+        const collectedContainer = document.querySelector('.collected-hearts');
+        const collectedHeart = document.createElement('div');
+        collectedHeart.className = 'collected-heart';
+        collectedHeart.style.setProperty('--heart-color', color);
+        collectedContainer.appendChild(collectedHeart);
+        
+        // Add click handler to remove heart
+        collectedHeart.addEventListener('click', () => {
+            const index = this.collectedHeartColors.indexOf(color);
+            if (index !== -1) {
+                this.collectedHeartColors.splice(index, 1);
+                collectedHeart.remove();
+                this.updateHeartsCounter();
+            }
+        });
+        
+        // Remove collected heart
+        heart.remove();
+        
+        // Update counter
+        this.updateHeartsCounter();
+    }
+
+    updateHeartsCounter() {
+        const targetCount = this.selectedNumber;
+        const correctHearts = this.collectedHeartColors.filter(color => color === this.targetHeartColor).length;
+        document.querySelector('.collected').textContent = `${correctHearts}/${targetCount}`;
+    }
+
+    finishHeartCollection() {
+        const correctHearts = this.collectedHeartColors.filter(color => color === this.targetHeartColor).length;
+        
+        if (correctHearts === this.selectedNumber) {
+            this.createCelebration();
+            clearInterval(this.heartInterval);
+            
+            setTimeout(() => {
+                this.showStage('number-drawing');
+                document.getElementById('drawing-number').textContent = this.selectedNumber;
+            }, 1000);
+        } else {
+            alert('עדיין לא אספת את כל הלבבות הנכונים!');
+        }
     }
 }
 
