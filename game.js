@@ -34,11 +34,13 @@ class MathGame {
     setupDrawingCanvas() {
         this.canvas = document.getElementById('drawing-canvas');
         this.ctx = this.canvas.getContext('2d');
-        this.isDrawing = false;
+        this.isDrawing = true;
+        this.resized = false;
         this.lastX = 0;
         this.lastY = 0;
 
         const resizeCanvas = () => {
+            console.log('resizeCanvas');
             const rect = this.canvas.getBoundingClientRect();
             const dpr = window.devicePixelRatio || 1;
             this.canvas.width = rect.width * dpr;
@@ -48,13 +50,25 @@ class MathGame {
             this.ctx.lineJoin = 'round';
             this.ctx.lineWidth = 8;
             this.ctx.strokeStyle = '#000';
+            
         };
 
         resizeCanvas();
+        
         window.addEventListener('resize', resizeCanvas);
 
         const startDrawing = (x, y) => {
+            if (!this.resized)
+            {
+                resizeCanvas();
+                this.resized = true;
+            }
+                
+
+            
             this.isDrawing = true;
+            console.log('start drawing');
+            console.log(this.resized);
             this.lastX = x;
             this.lastY = y;
             this.ctx.beginPath();
@@ -63,6 +77,7 @@ class MathGame {
 
         const draw = (x, y) => {
             if (!this.isDrawing) return;
+            console.log('drawing');
             this.ctx.lineTo(x, y);
             this.ctx.stroke();
             this.lastX = x;
