@@ -42,6 +42,7 @@ class MathGame {
         const resizeCanvas = () => {
             console.log('resizeCanvas');
             const rect = this.canvas.getBoundingClientRect();
+            console.log(rect);
             const dpr = window.devicePixelRatio || 1;
             this.canvas.width = rect.width * dpr;
             this.canvas.height = rect.height * dpr;
