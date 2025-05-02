@@ -208,6 +208,8 @@ class MathGame {
     speakNumber() {
         const utterance = new SpeechSynthesisUtterance(this.selectedNumber.toString());
         utterance.lang = 'he-IL';
+        utterance.voice = speechSynthesis.getVoices().find(voice => voice.lang === 'he-IL') || null;
+        utterance.rate = 0.8; 
         speechSynthesis.speak(utterance);
     }
 
