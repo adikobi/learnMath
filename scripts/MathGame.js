@@ -1,4 +1,7 @@
-class MathGame {
+import { HEART_COLORS, HEART_COLOR_NAMES, HEART_EMOJIS } from './config.js';
+import { createCelebration, createSelectionCelebration, animateFloating } from './utils.js';
+
+export class MathGame {
     constructor() {
         this.currentPlayer = null;
         this.selectedNumber = null;
@@ -7,25 +10,24 @@ class MathGame {
         this.completedExercises = 0;
         this.selectedDigits = [];
         this.collectedHearts = 0;
-        this.collectedHeartColors = [];
+        this.heartInterval = null;
+
         this.setupEventListeners();
         this.setupDrawingCanvas();
         
-        // Ensure we start with player selection
         this.showStage('player-selection');
     }
 
     setupEventListeners() {
-        // Player selection
+        document.getElementById('home-button').addEventListener('click', () => this.goHome());
+
         document.querySelectorAll('.player').forEach(player => {
             player.addEventListener('click', () => this.selectPlayer(player.dataset.player));
         });
 
-        // Drawing canvas buttons
         document.getElementById('clear-canvas').addEventListener('click', () => this.clearCanvas());
         document.getElementById('finish-drawing').addEventListener('click', () => this.finishDrawing());
 
-        // Target number click
         document.getElementById('target-number').addEventListener('click', () => this.toggleNumberVisibility());
         document.getElementById('repeat-number').addEventListener('click', () => this.speakNumber());
     }
@@ -40,9 +42,7 @@ class MathGame {
         this.colorHue = 0;
 
         const resizeCanvas = () => {
-            console.log('resizeCanvas');
             const rect = this.canvas.getBoundingClientRect();
-            console.log(rect);
             const dpr = window.devicePixelRatio || 1;
             this.canvas.width = rect.width * dpr;
             this.canvas.height = rect.height * dpr;
@@ -54,7 +54,6 @@ class MathGame {
         };
 
         resizeCanvas();
-        
         window.addEventListener('resize', resizeCanvas);
 
         const startDrawing = (x, y) => {
@@ -62,10 +61,7 @@ class MathGame {
                 resizeCanvas();
                 this.resized = true;
             }
-            
             this.isDrawing = true;
-            console.log('start drawing');
-            console.log(this.resized);
             this.lastX = x;
             this.lastY = y;
             this.ctx.beginPath();
@@ -74,16 +70,11 @@ class MathGame {
 
         const draw = (x, y) => {
             if (!this.isDrawing) return;
-            console.log('drawing');
-            
-            // Update color
             this.colorHue = (this.colorHue + 1) % 360;
             this.ctx.strokeStyle = `hsl(${this.colorHue}, 100%, 50%)`;
-            
             this.ctx.lineTo(x, y);
             this.ctx.stroke();
-            this.lastX = x;
-            this.lastY = y;
+            [this.lastX, this.lastY] = [x, y];
         };
 
         const stopDrawing = () => {
@@ -93,66 +84,32 @@ class MathGame {
             }
         };
 
-        // Mouse events
-        this.canvas.addEventListener('mousedown', (e) => {
-            const rect = this.canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            startDrawing(x, y);
-        });
-
-        this.canvas.addEventListener('mousemove', (e) => {
-            const rect = this.canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            draw(x, y);
-        });
-
+        this.canvas.addEventListener('mousedown', (e) => startDrawing(e.offsetX, e.offsetY));
+        this.canvas.addEventListener('mousemove', (e) => draw(e.offsetX, e.offsetY));
         this.canvas.addEventListener('mouseup', stopDrawing);
         this.canvas.addEventListener('mouseout', stopDrawing);
-
-        // Touch events
         this.canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            const rect = this.canvas.getBoundingClientRect();
             const touch = e.touches[0];
-            const x = touch.clientX - rect.left;
-            const y = touch.clientY - rect.top;
-            startDrawing(x, y);
+            const rect = this.canvas.getBoundingClientRect();
+            startDrawing(touch.clientX - rect.left, touch.clientY - rect.top);
         });
-
         this.canvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
-            const rect = this.canvas.getBoundingClientRect();
             const touch = e.touches[0];
-            const x = touch.clientX - rect.left;
-            const y = touch.clientY - rect.top;
-            draw(x, y);
+            const rect = this.canvas.getBoundingClientRect();
+            draw(touch.clientX - rect.left, touch.clientY - rect.top);
         });
-
-        this.canvas.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            stopDrawing();
-        });
-
-        this.canvas.addEventListener('touchcancel', (e) => {
-            e.preventDefault();
-            stopDrawing();
-        });
+        this.canvas.addEventListener('touchend', e => { e.preventDefault(); stopDrawing(); });
+        this.canvas.addEventListener('touchcancel', e => { e.preventDefault(); stopDrawing(); });
     }
 
     showStage(stage) {
-        // Hide all stages first
         document.querySelectorAll('.game-stage').forEach(s => {
             s.classList.remove('active');
-            s.style.display = 'none';
         });
-        
-        // Show the requested stage
         const stageElement = document.getElementById(stage);
         stageElement.classList.add('active');
-        stageElement.style.display = 'flex';
-        
         this.currentStage = stage;
     }
 
@@ -161,8 +118,7 @@ class MathGame {
         const selectedPlayer = document.querySelector(`[data-player="${player}"]`);
         selectedPlayer.classList.add('player-selected');
         
-        // Create selection celebration
-        this.createSelectionCelebration();
+        createSelectionCelebration();
         
         setTimeout(() => {
             this.resetGame();
@@ -171,25 +127,11 @@ class MathGame {
         }, 1000);
     }
 
-    createSelectionCelebration() {
-        const celebration = document.createElement('div');
-        celebration.className = 'selection-celebration';
-        document.body.appendChild(celebration);
-
-        const emojis = ['🎮', '🎯', '🎲', '🎪', '🎨', '🎭', '🎪', '🎯', '🎲', '🎮'];
-        const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'];
-
-        for (let i = 0; i < 20; i++) {
-            const item = document.createElement('div');
-            item.className = 'selection-celebration-item';
-            item.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-            item.style.left = `${Math.random() * 100}%`;
-            item.style.color = colors[Math.floor(Math.random() * colors.length)];
-            item.style.animationDelay = `${Math.random() * 0.5}s`;
-            celebration.appendChild(item);
-        }
-
-        setTimeout(() => celebration.remove(), 2000);
+    goHome() {
+        this.showStage('player-selection');
+        this.resetGame();
+        document.querySelectorAll('.player').forEach(p => p.classList.remove('player-selected'));
+        this.currentPlayer = null;
     }
 
     resetGame() {
@@ -201,6 +143,9 @@ class MathGame {
             exercise.querySelector('.selected-numbers').innerHTML = '';
         });
         this.clearCanvas();
+        if (this.heartInterval) {
+            clearInterval(this.heartInterval);
+        }
     }
 
     generateRandomNumber() {
@@ -217,15 +162,14 @@ class MathGame {
     }
 
     toggleNumberVisibility() {
-        const targetNumber = document.getElementById('target-number');
-        targetNumber.classList.toggle('hidden');
+        document.getElementById('target-number').classList.toggle('hidden');
     }
 
     speakNumber() {
         const utterance = new SpeechSynthesisUtterance(this.selectedNumber.toString());
         utterance.lang = 'he-IL';
         utterance.voice = speechSynthesis.getVoices().find(voice => voice.lang === 'he-IL') || null;
-        utterance.rate = 0.8; 
+        utterance.rate = 0.8;
         speechSynthesis.speak(utterance);
     }
 
@@ -233,7 +177,6 @@ class MathGame {
         const container = document.getElementById('floating-numbers');
         container.innerHTML = '';
         
-        // Create 6 random numbers including the target number
         const numbers = [this.selectedNumber];
         while (numbers.length < 6) {
             const num = Math.floor(Math.random() * 10) + 1;
@@ -246,39 +189,14 @@ class MathGame {
             element.className = 'floating-number';
             element.dataset.number = num;
             
-            // Random position
             element.style.left = `${Math.random() * (container.offsetWidth - 70)}px`;
             element.style.top = `${Math.random() * (container.offsetHeight - 70)}px`;
             
             element.addEventListener('click', () => this.checkNumberSelection(num));
             container.appendChild(element);
             
-            // Animate floating
-            this.animateFloating(element);
+            animateFloating(element);
         });
-    }
-
-    animateFloating(element) {
-        let x = parseFloat(element.style.left);
-        let y = parseFloat(element.style.top);
-        let dx = (Math.random() - 0.5) * 2;
-        let dy = (Math.random() - 0.5) * 2;
-
-        const animate = () => {
-            x += dx;
-            y += dy;
-
-            // Bounce off walls
-            if (x <= 0 || x >= element.parentElement.offsetWidth - 70) dx *= -1;
-            if (y <= 0 || y >= element.parentElement.offsetHeight - 70) dy *= -1;
-
-            element.style.left = `${x}px`;
-            element.style.top = `${y}px`;
-
-            requestAnimationFrame(animate);
-        };
-
-        animate();
     }
 
     checkNumberSelection(number) {
@@ -293,7 +211,6 @@ class MathGame {
         exercises.forEach((exercise, index) => {
             let equation;
             if (this.currentPlayer === 'mayan') {
-                // For Mayan: multiplication or division
                 const operation = Math.random() < 0.5 ? '*' : '/';
                 if (operation === '*') {
                     const num2 = Math.floor(Math.random() * 10) + 1;
@@ -305,31 +222,20 @@ class MathGame {
                     this.exerciseAnswers[index] = num2 / this.selectedNumber;
                 }
             } else {
-                // For Tamar and Yael: addition
                 const num2 = Math.floor(Math.random() * 10) + 1;
-                if (index === 0) {
-                    equation = `${this.selectedNumber} + ${num2} = ?`;
-                    this.exerciseAnswers[index] = this.selectedNumber + num2;
-                } else {
-                    equation = `${num2} + ${this.selectedNumber} = ?`;
-                    this.exerciseAnswers[index] = num2 + this.selectedNumber;
-                }
+                equation = `${index === 0 ? this.selectedNumber : num2} + ${index === 0 ? num2 : this.selectedNumber} = ?`;
+                this.exerciseAnswers[index] = this.selectedNumber + num2;
             }
 
             exercise.querySelector('.equation').textContent = equation;
             this.createNumberOptions(exercise, index);
         });
 
-        // Show only the first exercise initially
         exercises[1].style.display = 'none';
         
-        // Add exercise navigation dots
         const nav = document.createElement('div');
         nav.className = 'exercise-nav';
-        nav.innerHTML = `
-            <div class="exercise-dot active"></div>
-            <div class="exercise-dot"></div>
-        `;
+        nav.innerHTML = `<div class="exercise-dot active"></div><div class="exercise-dot"></div>`;
         document.getElementById('math-exercises').appendChild(nav);
     }
 
@@ -337,7 +243,6 @@ class MathGame {
         const optionsContainer = exercise.querySelector('.number-options');
         optionsContainer.innerHTML = '';
         
-        // Create number options (0-9)
         for (let i = 0; i <= 9; i++) {
             const option = document.createElement('div');
             option.className = 'number-option';
@@ -361,32 +266,23 @@ class MathGame {
             this.selectedDigits[exerciseIndex] = [];
         }
 
-        // Add new number
         this.selectedDigits[exerciseIndex].push(number);
         option.classList.add('selected-number');
         
-        // Update count indicator
         const count = this.selectedDigits[exerciseIndex].filter(n => n === number).length;
         option.setAttribute('data-count', count);
         
-        // Add the selected image to the answer area
         const img = document.createElement('img');
         img.src = `images/${this.currentPlayer}/${this.currentPlayer}${number}.jpg`;
         img.dataset.number = number;
         selectedNumbers.appendChild(img);
 
-        // Add click handler to remove number from answer
         img.addEventListener('click', () => {
-            // Remove the image
             img.remove();
-            
-            // Remove the number from selected digits
-            const index = this.selectedDigits[exerciseIndex].indexOf(number);
-            if (index !== -1) {
-                this.selectedDigits[exerciseIndex].splice(index, 1);
+            const indexToRemove = this.selectedDigits[exerciseIndex].indexOf(number);
+            if (indexToRemove !== -1) {
+                this.selectedDigits[exerciseIndex].splice(indexToRemove, 1);
             }
-            
-            // Update count indicator
             const newCount = this.selectedDigits[exerciseIndex].filter(n => n === number).length;
             if (newCount === 0) {
                 option.classList.remove('selected-number');
@@ -394,28 +290,24 @@ class MathGame {
             } else {
                 option.setAttribute('data-count', newCount);
             }
-            
-            // Check answer after removal
             this.checkAnswer(exerciseIndex);
         });
 
-        // Check answer after adding
         this.checkAnswer(exerciseIndex);
     }
 
     checkAnswer(exerciseIndex) {
         const exercise = document.querySelectorAll('.exercise')[exerciseIndex];
         const answer = this.exerciseAnswers[exerciseIndex];
-        const selectedNumber = parseInt(this.selectedDigits[exerciseIndex].join(''));
+        const selectedAnswer = parseInt(this.selectedDigits[exerciseIndex].join(''));
         
-        if (selectedNumber === answer) {
-            this.createCelebration();
+        if (selectedAnswer === answer) {
+            createCelebration();
             exercise.style.backgroundColor = '#90EE90';
             exercise.classList.add('success');
             this.completedExercises++;
             
             if (this.completedExercises === 1) {
-                // Show the second exercise
                 setTimeout(() => {
                     document.querySelectorAll('.exercise')[1].style.display = 'flex';
                     document.querySelectorAll('.exercise-dot')[1].classList.add('active');
@@ -442,143 +334,70 @@ class MathGame {
         }
     }
 
-    createCelebration() {
-        const emojis = ['🎉', '✨', '🎊', '🌟', '💫', '🎈', '🎨', '🎯', '🎪', '🎭'];
-        const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'];
-        
-        for (let i = 0; i < 30; i++) {
-            const celebration = document.createElement('div');
-            celebration.className = 'celebration';
-            celebration.style.left = Math.random() * window.innerWidth + 'px';
-            celebration.style.top = Math.random() * window.innerHeight + 'px';
-            
-            // Random emoji
-            const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-            celebration.textContent = emoji;
-            
-            // Random color
-            celebration.style.color = colors[Math.floor(Math.random() * colors.length)];
-            
-            // Random size
-            const size = Math.random() * 20 + 20;
-            celebration.style.fontSize = `${size}px`;
-            
-            // Random rotation
-            celebration.style.transform = `rotate(${Math.random() * 360}deg)`;
-            
-            document.body.appendChild(celebration);
-            
-            setTimeout(() => celebration.remove(), 2000);
-        }
-    }
-
     clearCanvas() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
     finishDrawing() {
-        this.showStage('player-selection');
-        this.resetGame();
+        this.goHome();
     }
 
     startHeartCollection() {
         this.collectedHearts = 0;
-        this.collectedHeartColors = [];
-        this.updateHeartsCounter();
         
-        // Generate random target color
-        const colors = ['#FF69B4', '#FFFFFF', '#FFA500', '#FFFF00', '#00FF00', '#0000FF', '#800080'];
-        this.targetHeartColor = colors[Math.floor(Math.random() * colors.length)];
+        this.targetHeartColor = HEART_COLORS[Math.floor(Math.random() * HEART_COLORS.length)];
+        const targetColorName = HEART_COLOR_NAMES[this.targetHeartColor];
+
+        document.getElementById('heart-instructions').textContent = `אספו ${this.selectedNumber} לבבות בצבע ${targetColorName}.`;
+        document.querySelector('.target-color-display').style.backgroundColor = this.targetHeartColor;
         
-        // Display target color
-        const targetDisplay = document.querySelector('.target-color-display');
-        targetDisplay.style.backgroundColor = this.targetHeartColor;
-        
-        // Set target count
-        // document.querySelector('.target-count').textContent = this.selectedNumber;
-        
-        // Clear previous hearts
-        const container = document.querySelector('.hearts-container');
-        container.innerHTML = '';
+        document.querySelector('.hearts-container').innerHTML = '';
         document.querySelector('.collected-hearts').innerHTML = '';
         
-        // Add finish button
-        const finishButton = document.createElement('button');
-        finishButton.className = 'finish-hearts-button';
-        finishButton.textContent = 'סיים איסוף לבבות';
-        finishButton.addEventListener('click', () => this.finishHeartCollection());
-        document.getElementById('heart-collection').appendChild(finishButton);
-        
-        // Start generating hearts
         this.generateHearts();
     }
 
     generateHearts() {
         const container = document.querySelector('.hearts-container');
-        const colors = ['#FF69B4', '#FFFFFF', '#FFA500', '#FFFF00', '#00FF00', '#0000FF', '#800080'];
-        const hearts = ['🩷', '❤', '🧡', '💛', '💚', '💙', '💜'];
         
         const createHeart = () => {
             const heart = document.createElement('div');
             heart.className = 'heart';
             
-            // Random position across the width
             const maxLeft = window.innerWidth - 100;
-            const left = Math.random() * maxLeft;
-            heart.style.left = `${left}px`;
+            heart.style.left = `${Math.random() * maxLeft}px`;
             
-            // Make sure target color appears more frequently
             const colorIndex = Math.random() < 0.5 ? 
-                colors.indexOf(this.targetHeartColor) : 
-                Math.floor(Math.random() * colors.length);
-            const color = colors[colorIndex];
-            const heartEmoji = hearts[colorIndex];
+                HEART_COLORS.indexOf(this.targetHeartColor) :
+                Math.floor(Math.random() * HEART_COLORS.length);
+            const color = HEART_COLORS[colorIndex];
+            const heartEmoji = HEART_EMOJIS[colorIndex];
             heart.textContent = heartEmoji;
             heart.style.color = color;
             
-            // Add click handler with larger hitbox
-            const handleClick = (e) => {
-                const rect = heart.getBoundingClientRect();
-                const clickX = e.clientX;
-                const clickY = e.clientY;
-                
-                // Check if click is within the extended hitbox
-                const length = 360;
-                if (clickX >= rect.left - length && clickX <= rect.right + length &&
-                    clickY >= rect.top - length && clickY <= rect.bottom + length) {
-                    this.collectHeart(heart, color, heartEmoji);
-                }
-            };
+            heart.addEventListener('click', () => this.collectHeart(heart, color, heartEmoji));
             
-            heart.addEventListener('click', handleClick);
-            
-            // Add to container
             container.appendChild(heart);
             
-            // Remove heart after animation
-            heart.addEventListener('animationend', () => {
-                heart.remove();
-            });
+            heart.addEventListener('animationend', () => heart.remove());
         };
 
-        // Create initial hearts
-        for (let i = 0; i < 10; i++) {
-            createHeart();
-        }
+        for (let i = 0; i < 10; i++) createHeart();
 
-        // Continue generating hearts
         this.heartInterval = setInterval(() => {
-            if (this.currentStage === 'heart-collection') {
-                createHeart();
-            }
+            if (this.currentStage === 'heart-collection') createHeart();
         }, 1500);
     }
 
     collectHeart(heart, color, emoji) {
-        this.collectedHeartColors.push(color);
-        console.log(this.collectedHeartColors);
+        if (color !== this.targetHeartColor) {
+            heart.classList.add('shake');
+            setTimeout(() => heart.classList.remove('shake'), 500);
+            return;
+        }
+
+        this.collectedHearts++;
         
-        // Add to collected hearts display
         const collectedContainer = document.querySelector('.collected-hearts');
         const collectedHeart = document.createElement('div');
         collectedHeart.className = 'collected-heart';
@@ -586,76 +405,16 @@ class MathGame {
         collectedHeart.style.color = color;
         collectedContainer.appendChild(collectedHeart);
         
-        // Add click handler to remove heart
-        collectedHeart.addEventListener('click', () => {
-            const index = this.collectedHeartColors.indexOf(color);
-            if (index !== -1) {
-                this.collectedHeartColors.splice(index, 1);
-                collectedHeart.remove();
-                this.updateHeartsCounter();
-            }
-        });
-        
-        // Remove collected heart
         heart.remove();
-        
-        // Update counter
-        this.updateHeartsCounter();
-    }
 
-    updateHeartsCounter() {
-        const targetCount = this.selectedNumber;
-        const correctHearts = this.collectedHeartColors.filter(color => color === this.targetHeartColor).length;
-        const totalHearts = this.collectedHeartColors.length;
-        
-        // Update the target count display
-        const targetDisplay = document.querySelector('.target-count');
-        if (targetDisplay) {
-            targetDisplay.textContent = `${correctHearts}/${targetCount}`;
-            
-            // Add visual indicator if there are extra hearts
-            if (totalHearts > targetCount) {
-                targetDisplay.style.color = '#ff0000';
-            } else {
-                targetDisplay.style.color = '#4CAF50';
-            }
-        }
-    }
-
-    finishHeartCollection() {
-        const correctHearts = this.collectedHeartColors.filter(color => color === this.targetHeartColor).length;
-        const totalHearts = this.collectedHeartColors.length;
-        
-        if (correctHearts === this.selectedNumber && totalHearts === this.selectedNumber) {
-            this.createCelebration();
+        if (this.collectedHearts === this.selectedNumber) {
+            createCelebration();
             clearInterval(this.heartInterval);
             
             setTimeout(() => {
                 this.showStage('number-drawing');
-                document.getElementById('drawing-number').textContent = this.selectedNumber;
-            }, 1000);
-        } else {
-            // Visual feedback for error
-            const errorEmoji = document.createElement('div');
-            errorEmoji.className = 'error-feedback';
-            errorEmoji.textContent = '😢';
-            errorEmoji.style.position = 'fixed';
-            errorEmoji.style.top = '50%';
-            errorEmoji.style.left = '50%';
-            errorEmoji.style.transform = 'translate(-50%, -50%)';
-            errorEmoji.style.fontSize = '100px';
-            errorEmoji.style.animation = 'shake 0.5s ease-in-out';
-            errorEmoji.style.zIndex = '1000';
-            document.body.appendChild(errorEmoji);
-            
-            setTimeout(() => {
-                errorEmoji.remove();
-            }, 1000);
+                document.getElementById('drawing-instructions').textContent = `עכשיו, נסו לצייר את המספר ${this.selectedNumber}!`;
+            }, 1500);
         }
     }
 }
-
-// Initialize the game when the page loads
-window.addEventListener('load', () => {
-    new MathGame();
-}); 

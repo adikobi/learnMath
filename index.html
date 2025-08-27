@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="משחק חשבון חינוכי ומהנה לילדים, ללימוד מספרים ותרגילי חשבון פשוטים.">
+    <meta name="keywords" content="משחק, חשבון, ילדים, לימוד, מספרים, חינוכי">
     <title>משחק חשבון</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="game-container">
+        <button id="home-button">🏠</button>
         <!-- שלב 1: בחירת שחקן -->
         <div id="player-selection" class="game-stage active">
             <h2>🎮 בחר שחקן 🎮</h2>
@@ -30,6 +33,7 @@
         <!-- שלב 2: מציאת המספר -->
         <div id="number-finding" class="game-stage">
             <h2>🔍 מצא את המספר 🔍</h2>
+            <p class="stage-instructions">הקשיבו למספר, ואז לחצו על התמונה המתאימה.</p>
             <div id="target-number" class="hidden">לחץ כאן לשמיעת המספר</div>
             <div id="floating-numbers"></div>
             <div class="sound-button" id="repeat-number"></div>
@@ -38,6 +42,7 @@
         <!-- שלב 3: תרגילי חשבון -->
         <div id="math-exercises" class="game-stage">
             <h2>🧮 תרגילי חשבון 🧮</h2>
+            <p class="stage-instructions">פתרו את התרגילים על ידי שימוש בתמונות המספרים.</p>
             <div id="exercise1" class="exercise">
                 <div class="equation"></div>
                 <div class="number-options"></div>
@@ -51,6 +56,8 @@
         </div>
 
         <div id="heart-collection" class="game-stage">
+            <h2 id="heart-collection-title">💖 אספו לבבות 💖</h2>
+            <p class="stage-instructions" id="heart-instructions"></p>
             <div class="target-color-display"></div>
             <div class="hearts-container"></div>
             <div class="collected-hearts"></div>
@@ -62,6 +69,7 @@
         <!-- שלב 4: ציור המספר -->
         <div id="number-drawing" class="game-stage">
             <h2>🎨 צייר את המספר 🎨</h2>
+            <p class="stage-instructions" id="drawing-instructions"></p>
             <canvas id="drawing-canvas"></canvas>
             <div class="drawing-buttons">
                 <button id="clear-canvas">🧹 נקה</button>
@@ -69,6 +77,6 @@
             </div>
         </div>
     </div>
-    <script src="game.js"></script>
+    <script type="module" src="scripts/main.js"></script>
 </body>
 </html> 
